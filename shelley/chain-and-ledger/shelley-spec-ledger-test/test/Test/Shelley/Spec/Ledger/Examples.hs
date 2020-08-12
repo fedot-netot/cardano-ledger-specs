@@ -246,7 +246,7 @@ import Test.Shelley.Spec.Ledger.Generator.Core
     NatNonce (..),
     genesisCoins,
     genesisId,
-    mkBlock,
+    mkBlockFakeVRF,
     mkOCert,
     zero,
   )
@@ -547,7 +547,7 @@ initStEx2A =
 
 blockEx2A :: forall c. Mock c => Block c
 blockEx2A =
-  mkBlock
+  mkBlockFakeVRF
     (lastByronHeaderHash p)
     (slotKeys 10)
     [txEx2A]
@@ -692,7 +692,7 @@ txEx2B =
 
 blockEx2B :: forall c. Mock c => Block c
 blockEx2B =
-  mkBlock
+  mkBlockFakeVRF
     blockEx2AHash -- Hash of previous block
     (slotKeys 90)
     [txEx2B] -- Single transaction to record
@@ -762,7 +762,7 @@ txEx4A =
 
 blockEx4A :: forall c. Mock c => Block c
 blockEx4A =
-  mkBlock
+  mkBlockFakeVRF
     (lastByronHeaderHash p)
     (slotKeys 10)
     [txEx4A]
@@ -841,7 +841,7 @@ ex4A _ = CHAINExample initStEx2A blockEx4A (Right expectedStEx4A)
 -- | Example 4B - New genesis key delegation updated from future delegations
 blockEx4B :: forall c. Mock c => Block c
 blockEx4B =
-  mkBlock
+  mkBlockFakeVRF
     blockEx4AHash
     (slotKeys 50)
     []
@@ -958,7 +958,7 @@ txEx5A pot =
 
 blockEx5A :: forall c. Mock c => MIRPot -> Block c
 blockEx5A pot =
-  mkBlock
+  mkBlockFakeVRF
     (lastByronHeaderHash p)
     (slotKeys 10)
     [txEx5A pot]
@@ -1093,7 +1093,7 @@ txEx5B pot =
 
 blockEx5B :: forall c. Mock c => MIRPot -> Block c
 blockEx5B pot =
-  mkBlock
+  mkBlockFakeVRF
     (lastByronHeaderHash p)
     (slotKeys 10)
     [txEx5B pot]
@@ -1205,7 +1205,7 @@ txEx5D pot =
 
 blockEx5D :: forall c. Mock c => MIRPot -> Block c
 blockEx5D pot =
-  mkBlock
+  mkBlockFakeVRF
     (lastByronHeaderHash p)
     (slotKeys 10)
     [txEx5D pot]
@@ -1252,7 +1252,7 @@ txEx5D' pot =
 
 blockEx5D' :: forall c. Mock c => MIRPot -> Block c
 blockEx5D' pot =
-  mkBlock
+  mkBlockFakeVRF
     (bhHash (bheader $ blockEx5D pot))
     (slotKeys s)
     [txEx5D' pot]
@@ -1298,7 +1298,7 @@ txEx5D'' pot =
 
 blockEx5D'' :: Mock c => MIRPot -> Nonce -> Block c
 blockEx5D'' pot epochNonce =
-  mkBlock
+  mkBlockFakeVRF
     (bhHash (bheader $ blockEx5D' pot))
     (slotKeys s)
     [txEx5D'' pot]
@@ -1407,7 +1407,7 @@ word64SlotToKesPeriodWord slot =
 
 blockEx6A :: forall c. Mock c => Word64 -> Block c
 blockEx6A slot =
-  mkBlock
+  mkBlockFakeVRF
     blockEx2AHash
     (slotKeys slot)
     [txEx6A]

@@ -340,40 +340,32 @@ selectNextSlotWithLeader
         SlotNo ->
         Maybe (SlotNo, ChainState c, AllIssuerKeys c 'BlockIssuer)
       selectNextSlotWithLeaderThisEpoch fromSlot =
-        findJust selectLeaderForSlot [fromSlot .. toSlot]
+        findJust origChainState [fromSlot .. toSlot]
         where
-          chainSt = tickChainState fromSlot origChainState
           currentEpoch = epochFromSlotNo fromSlot
           toSlot = slotFromEpoch (currentEpoch + 1) - 1
-          epochNonce = chainEpochNonce chainSt
-          overlaySched = nesOsched $ chainNes chainSt
-          poolDistr = unPoolDistr . nesPd . chainNes $ chainSt
-          dpstate = (_delegationState . esLState . nesEs . chainNes) chainSt
-          (GenDelegs cores) = (_genDelegs . _dstate) dpstate
 
           findJust _ [] = Nothing
-          findJust f (x : xs) = case f x of
-            Just y -> Just (x, chainSt, y)
-            Nothing -> findJust f xs
+          findJust st (x : xs) = case selectLeaderForSlot tickedSt x of
+            Just y -> Just (x, tickedSt, y)
+            Nothing -> findJust tickedSt xs
+            where
+              tickedSt = tickChainState x st
 
-          isLeader slotNo poolHash vrfKey =
-            let y = VRF.evalCertified @(VRF c) () (mkSeed seedL slotNo epochNonce) vrfKey
-                stake = maybe 0 individualPoolStake $ Map.lookup poolHash poolDistr
+          isLeader slotNo poolHash vrfKey epochNonce_ poolDistr_ =
+            let y = VRF.evalCertified @(VRF c) () (mkSeed seedL slotNo epochNonce_) vrfKey
+                stake = maybe 0 individualPoolStake $ Map.lookup poolHash poolDistr_
                 f = activeSlotCoeff testGlobals
-             in case Map.lookup slotNo overlaySched of
-                  Nothing -> checkLeaderValue (VRF.certifiedOutput y) stake f
-                  Just (ActiveSlot x) | coerceKeyRole x == poolHash -> True
-                  _ -> False
-
+             in checkLeaderValue (VRF.certifiedOutput y) stake f
           -- Try to select a leader for the given slot
-          selectLeaderForSlot :: SlotNo -> Maybe (AllIssuerKeys c 'BlockIssuer)
-          selectLeaderForSlot slotNo =
+          selectLeaderForSlot :: ChainState c -> SlotNo -> Maybe (AllIssuerKeys c 'BlockIssuer)
+          selectLeaderForSlot chainSt slotNo =
             case Map.lookup slotNo overlaySched of
               Nothing ->
                 coerce
                   <$> List.find
                     ( \(AllIssuerKeys {vrf, hk}) ->
-                        isLeader slotNo hk (fst vrf)
+                        isLeader slotNo hk (fst vrf) epochNonce poolDistr
                     )
                     ksStakePools
               Just (ActiveSlot x) ->
@@ -381,6 +373,12 @@ selectNextSlotWithLeader
                   Map.lookup x cores
                     >>= \y -> Map.lookup (genDelegKeyHash y) ksIndexedGenDelegates
               _ -> Nothing
+              where 
+                epochNonce = chainEpochNonce chainSt
+                overlaySched = nesOsched $ chainNes chainSt
+                poolDistr = unPoolDistr . nesPd . chainNes $ chainSt
+                dpstate = (_delegationState . esLState . nesEs . chainNes) chainSt
+                (GenDelegs cores) = (_genDelegs . _dstate) dpstate
 
 -- | The chain state is a composite of the new epoch state and the chain dep
 -- state. We tick both.

@@ -899,13 +899,11 @@ updateNonMypopic ::
   NonMyopic era ->
   Coin ->
   Map (KeyHash 'StakePool era) Likelihood ->
-  SnapShot era ->
   NonMyopic era
-updateNonMypopic nm rPot newLikelihoods ss =
+updateNonMypopic nm rPot newLikelihoods =
   nm
     { likelihoodsNM = updatedLikelihoods,
-      rewardPotNM = rPot,
-      snapNM = ss
+      rewardPotNM = rPot
     }
   where
     history = likelihoodsNM nm
@@ -949,7 +947,7 @@ createRUpd slotsPerEpoch b@(BlocksMade b') (EpochState acnt ss ls pr _ nm) total
         deltaR = (- deltaR1 + deltaR2),
         rs = rs_,
         deltaF = (- (_feeSS ss)),
-        nonMyopic = (updateNonMypopic nm _R newLikelihoods (_pstakeGo ss))
+        nonMyopic = (updateNonMypopic nm _R newLikelihoods)
       }
 
 -- | Update new epoch state

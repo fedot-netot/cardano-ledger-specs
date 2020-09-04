@@ -39,6 +39,7 @@ where
 
 import Cardano.Prelude
 
+import Data.Typeable (typeOf)
 import Formatting (Format, sformat, shown)
 
 import Data.Digest.CRC32 (CRC32(..))
